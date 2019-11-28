@@ -242,10 +242,15 @@ export class Actor {
             ).add(expectedBalanceChange);
             const maximumFee = wallet.MaximumFee;
 
-            const balanceInclFees = expectedBalance.sub(maximumFee);
-            const currentWalletBalance = await wallet.getBalance();
-
-            expect(currentWalletBalance).to.be.gte.BN(balanceInclFees);
+            await expect(
+                wallet
+                    .getBalance()
+                    .then(balance =>
+                        new BigNumber(balance).gte(
+                            expectedBalance.sub(maximumFee)
+                        )
+                    )
+            ).to.eventually.be.true;
         }
     }
 
@@ -272,6 +277,29 @@ export class Actor {
                 .be.true;
         }
     }
+    public async assertAlphaFunded() {
+        await this.assertLedgerState("alpha_ledger", "FUNDED");
+    }
+
+    public async assertBetaFunded() {
+        await this.assertLedgerState("beta_ledger", "FUNDED");
+    }
+
+    public async assertAlphaRedeemed() {
+        await this.assertLedgerState("alpha_ledger", "REDEEMED");
+    }
+
+    public async assertBetaRedeemed() {
+        await this.assertLedgerState("beta_ledger", "REDEEMED");
+    }
+
+    public async assertAlphaRefunded() {
+        await this.assertLedgerState("alpha_ledger", "REFUNDED");
+    }
+
+    public async assertBetaRefunded() {
+        await this.assertLedgerState("beta_ledger", "REFUNDED");
+    }
 
     public async restart() {
         this.cndInstance.stop();
@@ -280,6 +308,31 @@ export class Actor {
 
     public stop() {
         this.cndInstance.stop();
+    }
+
+    private async assertLedgerState(
+        ledger: string,
+        status:
+            | "NOT_DEPLOYED"
+            | "DEPLOYED"
+            | "FUNDED"
+            | "REDEEMED"
+            | "REFUNDED"
+            | "INCORRECTLY_FUNDED"
+    ) {
+        this.logger.debug(
+            "Waiting for cnd to see %s funded for swap @ %s",
+            ledger,
+            this.swap.self
+        );
+
+        let swapEntity;
+
+        do {
+            swapEntity = await this.swap.fetchDetails();
+
+            await sleep(200);
+        } while (swapEntity.properties.state[ledger].status !== status);
     }
 
     private async additionalIdentities(
