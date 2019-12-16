@@ -321,8 +321,9 @@ export class Actor {
             | "INCORRECTLY_FUNDED"
     ) {
         this.logger.debug(
-            "Waiting for cnd to see %s funded for swap @ %s",
+            "Waiting for cnd to see %s in state %s for swap @ %s",
             ledger,
+            status,
             this.swap.self
         );
 
@@ -333,6 +334,13 @@ export class Actor {
 
             await sleep(200);
         } while (swapEntity.properties.state[ledger].status !== status);
+
+        this.logger.debug(
+            "cnd saw %s in state %s for swap @ %s",
+            ledger,
+            status,
+            this.swap.self
+        );
     }
 
     private async additionalIdentities(
