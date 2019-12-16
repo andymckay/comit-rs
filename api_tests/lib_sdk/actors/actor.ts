@@ -160,7 +160,7 @@ export class Actor {
 
     public async accept() {
         if (!this.swap) {
-            throw new Error("Cannot accept non existing swap");
+            throw new Error("Cannot accept non-existant swap");
         }
 
         await this.swap.accept(Actor.defaultActionConfig);
@@ -168,7 +168,7 @@ export class Actor {
 
     public async fund() {
         if (!this.swap) {
-            throw new Error("Cannot fund non existing swap");
+            throw new Error("Cannot fund non-existant swap");
         }
 
         this.logger.debug("Funding as part of swap @ %s", this.swap.self);
@@ -189,7 +189,7 @@ export class Actor {
 
     public async refund() {
         if (!this.swap) {
-            throw new Error("Cannot refund non existing swap");
+            throw new Error("Cannot refund non-existant swap");
         }
 
         this.logger.debug("Refunding as part of swap @ %s", this.swap.self);
