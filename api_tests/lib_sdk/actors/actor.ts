@@ -305,6 +305,7 @@ export class Actor {
                 .be.true;
         }
     }
+
     public async assertAlphaFunded() {
         await this.assertLedgerState("alpha_ledger", "FUNDED");
     }
