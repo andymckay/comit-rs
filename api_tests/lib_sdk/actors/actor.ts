@@ -484,8 +484,8 @@ function defaultAssetDescriptionForAsset(asset: AssetKind): Asset {
 }
 
 function defaultExpiryTimes() {
-    const alphaExpiry = Math.round(Date.now() / 1000) + 5;
-    const betaExpiry = Math.round(Date.now() / 1000);
+    const alphaExpiry = Math.round(Date.now() / 1000) + 8;
+    const betaExpiry = Math.round(Date.now() / 1000) + 3;
 
     return {
         alpha_expiry: alphaExpiry,
