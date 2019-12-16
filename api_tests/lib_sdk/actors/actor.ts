@@ -173,6 +173,18 @@ export class Actor {
 
         this.logger.debug("Funding as part of swap @ %s", this.swap.self);
         await this.swap.fund(Actor.defaultActionConfig);
+
+        const entity = await this.swap.fetchDetails();
+        switch (entity.properties.role) {
+            case "Alice":
+                await this.actors.alice.assertAlphaFunded();
+                await this.actors.bob.assertAlphaFunded();
+                break;
+            case "Bob":
+                await this.actors.alice.assertBetaFunded();
+                await this.actors.bob.assertBetaFunded();
+                break;
+        }
     }
 
     public async refund() {
@@ -182,6 +194,18 @@ export class Actor {
 
         this.logger.debug("Refunding as part of swap @ %s", this.swap.self);
         await this.swap.refund(Actor.defaultActionConfig);
+
+        const entity = await this.swap.fetchDetails();
+        switch (entity.properties.role) {
+            case "Alice":
+                await this.actors.alice.assertAlphaRefunded();
+                await this.actors.bob.assertAlphaRefunded();
+                break;
+            case "Bob":
+                await this.actors.alice.assertBetaRefunded();
+                await this.actors.bob.assertBetaRefunded();
+                break;
+        }
     }
 
     public async redeem() {
@@ -191,6 +215,18 @@ export class Actor {
 
         this.logger.debug("Redeeming as part of swap @ %s", this.swap.self);
         await this.swap.redeem(Actor.defaultActionConfig);
+
+        const entity = await this.swap.fetchDetails();
+        switch (entity.properties.role) {
+            case "Alice":
+                await this.actors.alice.assertBetaRedeemed();
+                await this.actors.bob.assertBetaRedeemed();
+                break;
+            case "Bob":
+                await this.actors.alice.assertAlphaRedeemed();
+                await this.actors.bob.assertAlphaRedeemed();
+                break;
+        }
     }
 
     public async currentSwapIsAccepted() {
@@ -203,14 +239,6 @@ export class Actor {
         } while (
             swapEntity.properties.state.communication.status !== "ACCEPTED"
         );
-    }
-
-    public async assertHasCurrentSwap() {
-        this.logger.debug("Checking if we can fetch the current swap");
-
-        const response = await this.cnd.fetch(this.swap.self);
-
-        return response;
     }
 
     public async assertSwapped() {

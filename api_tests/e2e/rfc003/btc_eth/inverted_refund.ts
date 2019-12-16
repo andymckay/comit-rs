@@ -31,20 +31,12 @@ setTimeout(function() {
             await bob.accept();
 
             await alice.fund();
-            await alice.assertAlphaFunded();
-            await bob.assertAlphaFunded();
 
             await bob.fund();
-            await alice.assertBetaFunded();
-            await bob.assertBetaFunded();
 
             await alice.refund();
-            await bob.refund();
 
-            await alice.assertBetaRefunded();
-            await alice.assertAlphaRefunded();
-            await bob.assertBetaRefunded();
-            await bob.assertAlphaRefunded();
+            await bob.refund();
 
             await bob.assertRefunded();
             await alice.assertRefunded();
