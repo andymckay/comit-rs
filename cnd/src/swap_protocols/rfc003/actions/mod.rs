@@ -2,9 +2,12 @@ pub mod bitcoin;
 pub mod erc20;
 pub mod ether;
 
-use crate::swap_protocols::{
-    asset::Asset,
-    rfc003::{secret_source::SecretSource, state_machine::HtlcParams, Ledger, Secret},
+use crate::{
+    seed::Seed,
+    swap_protocols::{
+        asset::Asset,
+        rfc003::{state_machine::HtlcParams, DeriveIdentities, Ledger, Secret},
+    },
 };
 use std::marker::PhantomData;
 
@@ -36,7 +39,7 @@ pub trait RefundAction<L: Ledger, A: Asset> {
     fn refund_action(
         htlc_params: HtlcParams<L, A>,
         htlc_location: L::HtlcLocation,
-        secret_source: &dyn SecretSource,
+        secret_source: Seed,
         fund_transaction: &L::Transaction,
     ) -> Self::RefundActionOutput;
 }
@@ -47,7 +50,7 @@ pub trait RedeemAction<L: Ledger, A: Asset> {
     fn redeem_action(
         htlc_params: HtlcParams<L, A>,
         htlc_location: L::HtlcLocation,
-        secret_source: &dyn SecretSource,
+        secret_source: &dyn DeriveIdentities,
         secret: Secret,
     ) -> Self::RedeemActionOutput;
 }

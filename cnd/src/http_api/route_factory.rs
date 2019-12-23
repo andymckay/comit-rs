@@ -8,7 +8,7 @@ use crate::{
     swap_protocols::{
         self,
         ledger::{Bitcoin, Ethereum},
-        rfc003::{events::HtlcEvents, state_store::StateStore},
+        rfc003::{events::HtlcEvents, state_store::StateStore, DeriveSecret},
         SwapId,
     },
 };
@@ -33,6 +33,7 @@ pub fn create<
         + Executor
         + Network
         + SwapSeed
+        + DeriveSecret
         + DetermineTypes
         + Retrieve
         + HtlcEvents<Bitcoin, Amount>

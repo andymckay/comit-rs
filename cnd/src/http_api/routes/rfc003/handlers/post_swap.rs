@@ -3,14 +3,14 @@ use crate::{
     ethereum::{self, Erc20Token, EtherQuantity},
     http_api::{HttpAsset, HttpLedger},
     network::{DialInformation, Network},
-    seed::SwapSeed,
+    seed::{Seed, SwapSeed},
     swap_protocols::{
         self,
         asset::Asset,
         ledger::{self, Bitcoin, Ethereum},
         rfc003::{
             self, alice::State, events::HtlcEvents, state_store::StateStore, Accept, Decline,
-            Ledger, Request, SecretHash, SecretSource,
+            DeriveIdentities, DeriveSecret, Ledger, Request, SecretHash,
         },
         HashFunction, Role, SwapId,
     },
@@ -33,6 +33,7 @@ pub async fn handle_post_swap<
         + StateStore
         + Save<Swap>
         + SwapSeed
+        + DeriveSecret
         + Saver
         + Network
         + Clone
@@ -45,7 +46,7 @@ pub async fn handle_post_swap<
 ) -> anyhow::Result<SwapCreated> {
     let id = SwapId::default();
     let seed = dependencies.swap_seed(id);
-    let secret_hash = seed.secret().hash();
+    let secret_hash = dependencies.derive_secret().hash();
 
     let body = serde_json::from_value(body)?;
 
@@ -311,10 +312,7 @@ struct Identities<AL: Ledger, BL: Ledger> {
 }
 
 trait IntoIdentities<AL: Ledger, BL: Ledger> {
-    fn into_identities(
-        self,
-        secret_source: &dyn SecretSource,
-    ) -> anyhow::Result<Identities<AL, BL>>;
+    fn into_identities(self, secret_saource: &Seed) -> anyhow::Result<Identities<AL, BL>>;
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -346,7 +344,7 @@ pub enum IdentityKind {
 impl IntoIdentities<ledger::Bitcoin, ledger::Ethereum> for HttpIdentities {
     fn into_identities(
         self,
-        secret_source: &dyn SecretSource,
+        secret_source: &Seed,
     ) -> anyhow::Result<Identities<ledger::Bitcoin, ledger::Ethereum>> {
         let HttpIdentities {
             alpha_ledger_refund_identity,
@@ -370,7 +368,7 @@ impl IntoIdentities<ledger::Bitcoin, ledger::Ethereum> for HttpIdentities {
 
         let alpha_ledger_refund_identity = crate::bitcoin::PublicKey::from_secret_key(
             &*crate::SECP,
-            &secret_source.secp256k1_refund(),
+            &secret_source.derive_refund_identity(),
         );
 
         Ok(Identities {
@@ -383,7 +381,7 @@ impl IntoIdentities<ledger::Bitcoin, ledger::Ethereum> for HttpIdentities {
 impl IntoIdentities<ledger::Ethereum, ledger::Bitcoin> for HttpIdentities {
     fn into_identities(
         self,
-        secret_source: &dyn SecretSource,
+        secret_source: &Seed,
     ) -> anyhow::Result<Identities<ledger::Ethereum, ledger::Bitcoin>> {
         let HttpIdentities {
             alpha_ledger_refund_identity,
@@ -407,7 +405,7 @@ impl IntoIdentities<ledger::Ethereum, ledger::Bitcoin> for HttpIdentities {
 
         let beta_ledger_redeem_identity = crate::bitcoin::PublicKey::from_secret_key(
             &*crate::SECP,
-            &secret_source.secp256k1_redeem(),
+            &secret_source.derive_redeem_identity(),
         );
 
         Ok(Identities {

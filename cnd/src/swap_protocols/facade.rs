@@ -17,7 +17,7 @@ use crate::{
             },
             state_machine::{HtlcParams, SwapStates},
             state_store::{self, InMemoryStateStore, StateStore},
-            ActorState, Ledger,
+            ActorState, DeriveSecret, Ledger, Secret,
         },
         SwapId,
     },
@@ -242,5 +242,14 @@ where
         future: Box<dyn Future<Item = (), Error = ()> + Send>,
     ) -> Result<(), executor::SpawnError> {
         executor::Executor::spawn(&mut self.task_executor, future)
+    }
+}
+
+impl<S> DeriveSecret for Facade<S>
+where
+    S: Send + Sync + 'static,
+{
+    fn derive_secret(&self) -> Secret {
+        self.seed.derive_secret()
     }
 }
