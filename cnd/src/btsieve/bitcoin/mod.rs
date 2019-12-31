@@ -15,10 +15,10 @@ use bitcoin::{
     BitcoinHash,
 };
 use futures_core::{compat::Future01CompatExt, TryFutureExt};
-use reqwest::{r#async::Client, Url};
+use reqwest::{Client, Url};
 use std::{collections::HashSet, fmt::Debug, ops::Add};
 use tokio::{
-    prelude::{future::Future, stream, Stream},
+    prelude::{stream, Stream},
     timer::Delay,
 };
 
@@ -174,16 +174,14 @@ fn check_block_against_pattern<'b>(
         .find(|transaction| pattern.matches(transaction))
 }
 
-pub fn bitcoin_http_request_for_hex_encoded_object<T: Decodable>(
+pub async fn bitcoin_http_request_for_hex_encoded_object<T: Decodable>(
     request_url: Url,
     client: Client,
-) -> impl Future<Item = T, Error = Error> {
-    client
-        .get(request_url)
-        .send()
-        .and_then(|mut response| response.text())
-        .map_err(Error::Reqwest)
-        .and_then(decode_response)
+) -> Result<T, Error> {
+    let response_text = client.get(request_url).send().await?.text().await?;
+    let decoded_response = decode_response(response_text)?;
+
+    Ok(decoded_response)
 }
 
 #[derive(Debug, thiserror::Error)]
