@@ -20,7 +20,7 @@ use futures::{
     future::Future,
     sync::oneshot::{self, Sender},
 };
-use futures_core::{FutureExt, TryFutureExt};
+use futures03::{FutureExt, TryFutureExt};
 use libp2p::{
     core::muxing::{StreamMuxer, SubstreamRef},
     mdns::{Mdns, MdnsEvent},
@@ -37,7 +37,7 @@ use std::{
     io,
     sync::{Arc, Mutex},
 };
-use tokio::runtime::TaskExecutor;
+use tokio_compat::runtime::TaskExecutor;
 
 #[derive(NetworkBehaviour)]
 #[allow(missing_debug_implementations)]

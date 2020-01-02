@@ -20,7 +20,7 @@ use futures::{
     future::{self, Either},
     Future,
 };
-use futures_core::future::{FutureExt, TryFutureExt};
+use futures03::future::{FutureExt, TryFutureExt};
 
 impl HtlcEvents<Bitcoin, Amount> for BitcoindConnector {
     fn htlc_deployed(

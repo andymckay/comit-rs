@@ -22,7 +22,7 @@ use futures::{
     future::{self, Either},
     Future,
 };
-use futures_core::future::{FutureExt, TryFutureExt};
+use futures03::future::{FutureExt, TryFutureExt};
 
 lazy_static::lazy_static! {
     /// keccak256(Redeemed())

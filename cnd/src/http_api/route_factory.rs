@@ -14,7 +14,7 @@ use crate::{
 };
 use bitcoin::Amount;
 use libp2p::PeerId;
-use tokio::executor::Executor;
+use tokio_executor01::Executor;
 use warp::{self, filters::BoxedFilter, Filter, Reply};
 
 pub const RFC003: &str = "rfc003";

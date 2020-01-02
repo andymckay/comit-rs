@@ -24,7 +24,7 @@ use crate::{
 };
 use bitcoin::Amount;
 use futures::Future;
-use futures_core::future::{FutureExt, TryFutureExt};
+use futures03::future::{FutureExt, TryFutureExt};
 use warp::{
     http::{self, header},
     Rejection, Reply,
@@ -32,7 +32,7 @@ use warp::{
 
 pub use self::swap_state::{LedgerState, SwapCommunication, SwapCommunicationState, SwapState};
 use crate::{db::Saver, http_api::problem};
-use tokio::executor::Executor;
+use tokio_executor01::Executor;
 
 #[allow(clippy::needless_pass_by_value)]
 pub fn post_swap<

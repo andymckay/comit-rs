@@ -8,7 +8,7 @@ use crate::{
     swap_protocols::rfc003::state_store::StateStore,
 };
 use futures::Future;
-use futures_core::future::{FutureExt, TryFutureExt};
+use futures03::future::{FutureExt, TryFutureExt};
 use libp2p::{Multiaddr, PeerId};
 use serde::Serialize;
 use warp::{Rejection, Reply};

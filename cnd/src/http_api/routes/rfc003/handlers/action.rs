@@ -31,7 +31,7 @@ use anyhow::Context;
 use bitcoin::Amount;
 use libp2p_comit::frame::Response;
 use std::fmt::Debug;
-use tokio::executor::Executor;
+use tokio_executor01::Executor;
 use warp::http;
 
 #[allow(clippy::unit_arg, clippy::let_unit_value, clippy::cognitive_complexity)]

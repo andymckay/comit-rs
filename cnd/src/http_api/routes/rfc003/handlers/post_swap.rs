@@ -18,14 +18,10 @@ use crate::{
 };
 use anyhow::Context;
 use bitcoin::Amount;
-use futures::Future;
-use futures_core::{
-    compat::Future01CompatExt,
-    future::{FutureExt, TryFutureExt},
-};
+use futures03::{compat::Future01CompatExt, future::TryFutureExt};
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
-use tokio::executor::Executor;
+use tokio_executor01::Executor;
 
 pub async fn handle_post_swap<
     D: Clone
@@ -264,9 +260,11 @@ where
             Ok(())
         }
     };
-    tokio::spawn(future.boxed().compat().map_err(|e: anyhow::Error| {
+
+    tokio::task::spawn(future.map_err(|e: anyhow::Error| {
         log::error!("{:?}", e);
     }));
+
     Ok(())
 }
 

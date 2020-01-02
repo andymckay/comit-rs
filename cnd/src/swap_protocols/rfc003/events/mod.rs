@@ -6,10 +6,10 @@ use crate::swap_protocols::{
     asset::Asset,
     rfc003::{self, ledger::Ledger, state_machine::HtlcParams, Secret},
 };
+use futures::future::Either;
 use serde::{Deserialize, Serialize};
-use tokio::{self, prelude::future::Either};
 
-type Future<I> = dyn tokio::prelude::Future<Item = I, Error = rfc003::Error> + Send;
+type Future<I> = dyn futures::Future<Item = I, Error = rfc003::Error> + Send;
 
 #[allow(type_alias_bounds)]
 pub type ResponseFuture<AL, BL> = Future<rfc003::Response<AL, BL>>;
