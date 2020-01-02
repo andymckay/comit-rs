@@ -43,7 +43,7 @@ where
 }
 
 async fn matching_transaction<C, E>(
-    mut blockchain_connector: C,
+    blockchain_connector: C,
     pattern: TransactionPattern,
     reference_timestamp: Option<u32>,
 ) -> Result<bitcoin::Transaction, ()>
@@ -100,8 +100,7 @@ where
                             let unknown_parent = prev_blockhashes.insert(prev_blockhash);
 
                             if unknown_parent {
-                                let future =
-                                    blockchain_connector.block_by_hash(prev_blockhash).compat();
+                                let future = blockchain_connector.block_by_hash(prev_blockhash);
                                 new_missing_block_futures.push((future, prev_blockhash));
                             }
                         }
@@ -110,7 +109,7 @@ where
                 Err(e) => {
                     log::warn!("Could not get block with hash {}: {:?}", blockhash, e);
 
-                    let future = blockchain_connector.block_by_hash(blockhash).compat();
+                    let future = blockchain_connector.block_by_hash(blockhash);
                     new_missing_block_futures.push((future, blockhash));
                 }
             };
@@ -125,7 +124,6 @@ where
             if block.header.time >= reference_timestamp {
                 match blockchain_connector
                     .block_by_hash(block.header.prev_blockhash)
-                    .compat()
                     .await
                 {
                     Ok(block) => match check_block_against_pattern(&block, &pattern) {
@@ -155,7 +153,7 @@ where
                 // In case we missed a block somehow, check this blocks parent.
                 if !prev_blockhashes.contains(&latest_block.header.prev_blockhash) {
                     let prev_blockhash = latest_block.header.prev_blockhash;
-                    let future = blockchain_connector.block_by_hash(prev_blockhash).compat();
+                    let future = blockchain_connector.block_by_hash(prev_blockhash);
 
                     missing_block_futures.push((future, prev_blockhash));
                 }

@@ -6,7 +6,7 @@ use std::{
     collections::HashMap,
     time::{Duration, Instant},
 };
-use tokio::prelude::{Future, IntoFuture};
+use tokio::prelude::Future;
 
 #[derive(Clone)]
 pub struct EthereumConnectorMock {
@@ -41,16 +41,15 @@ impl EthereumConnectorMock {
     }
 }
 
+#[async_trait::async_trait]
 impl LatestBlock for EthereumConnectorMock {
     type Error = ();
     type Block = Option<Block<Transaction>>;
     type BlockHash = H256;
 
-    fn latest_block(
-        &mut self,
-    ) -> Box<dyn Future<Item = Self::Block, Error = Self::Error> + Send + 'static> {
+    async fn latest_block(&mut self) -> Result<Self::Block, Self::Error> {
         if self.latest_blocks.is_empty() {
-            return Box::new(Err(()).into_future());
+            return Err(());
         }
 
         let latest_block = self.latest_blocks[self.current_latest_block_index].clone();
@@ -64,33 +63,33 @@ impl LatestBlock for EthereumConnectorMock {
                 self.current_latest_block_index += 1;
             }
         }
-        Box::new(Ok(Some(latest_block)).into_future())
+
+        Ok(Some(latest_block))
     }
 }
 
+#[async_trait::async_trait]
 impl BlockByHash for EthereumConnectorMock {
     type Error = ();
     type Block = Option<Block<Transaction>>;
     type BlockHash = H256;
 
-    fn block_by_hash(
-        &self,
-        block_hash: Self::BlockHash,
-    ) -> Box<dyn Future<Item = Self::Block, Error = Self::Error> + Send + 'static> {
-        Box::new(Ok(self.all_blocks.get(&block_hash).cloned()).into_future())
+    async fn block_by_hash(&self, block_hash: Self::BlockHash) -> Result<Self::Block, Self::Error> {
+        Ok(self.all_blocks.get(&block_hash).cloned())
     }
 }
 
+#[async_trait::async_trait]
 impl ReceiptByHash for EthereumConnectorMock {
     type Error = ();
     type Receipt = Option<TransactionReceipt>;
     type TransactionHash = H256;
 
-    fn receipt_by_hash(
+    async fn receipt_by_hash(
         &self,
         transaction_hash: Self::TransactionHash,
-    ) -> Box<dyn Future<Item = Self::Receipt, Error = Self::Error> + Send + 'static> {
-        Box::new(Ok(self.receipts.get(&transaction_hash).cloned()).into_future())
+    ) -> Result<Self::Receipt, Self::Error> {
+        Ok(self.receipts.get(&transaction_hash).cloned())
     }
 }
 

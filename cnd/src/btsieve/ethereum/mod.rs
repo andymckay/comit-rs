@@ -53,7 +53,7 @@ where
                         .await
                         .unwrap();
 
-                    match connector.latest_block().compat().await {
+                    match connector.latest_block().await {
                         Ok(Some(block)) if block.hash.is_some() => {
                             let blockhash = block.hash.expect("cannot fail");
 
@@ -96,7 +96,7 @@ where
                 loop {
                     match next_hash.recv().await {
                         Some(blockhash) => {
-                            match connector.block_by_hash(blockhash).compat().await {
+                            match connector.block_by_hash(blockhash).await {
                                 Ok(Some(block)) => {
                                     join(
                                         block_queue.send(block.clone()),
@@ -152,7 +152,7 @@ where
                 loop {
                     match next_look_in_the_past.recv().await {
                         Some(parent_blockhash) => {
-                            match connector.block_by_hash(parent_blockhash).compat().await {
+                            match connector.block_by_hash(parent_blockhash).await {
                                 Ok(Some(block)) => {
                                     let younger_than_reference_timestamp = reference_timestamp
                                         .map(|reference_timestamp| {
@@ -203,8 +203,7 @@ where
 
                             for transaction in block.transactions.into_iter() {
                                 if needs_receipt {
-                                    let result =
-                                        connector.receipt_by_hash(transaction.hash).compat().await;
+                                    let result = connector.receipt_by_hash(transaction.hash).await;
 
                                     let receipt = match result {
                                         Ok(Some(receipt)) => receipt,
@@ -231,8 +230,7 @@ where
                                             .await;
                                     }
                                 } else if pattern.matches(&transaction, None) {
-                                    let result =
-                                        connector.receipt_by_hash(transaction.hash).compat().await;
+                                    let result = connector.receipt_by_hash(transaction.hash).await;
 
                                     let receipt = match result {
                                         Ok(Some(receipt)) => receipt,
