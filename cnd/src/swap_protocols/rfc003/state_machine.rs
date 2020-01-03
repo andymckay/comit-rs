@@ -6,10 +6,7 @@ use crate::{
         asset::Asset,
         rfc003::{
             self,
-            events::{
-                Deployed, DeployedFuture, Funded, FundedFuture, HtlcEvents, Redeemed,
-                RedeemedOrRefundedFuture, Refunded,
-            },
+            events::{Deployed, Funded, HtlcEvents, Redeemed, Refunded},
             ledger::Ledger,
             Accept, Request, SaveState, SecretHash,
         },
@@ -19,6 +16,7 @@ use crate::{
 };
 use either::Either;
 use futures::{future, sync::mpsc, try_ready, Async, Future, Stream};
+use futures_core::future::{FutureExt, TryFutureExt};
 use state_machine_future::{RentToOwn, StateMachineFuture};
 use std::{cmp::Ordering::*, fmt, sync::Arc};
 
@@ -172,11 +170,16 @@ pub type FutureSwapOutcome<AL: Ledger, BL: Ledger, AA: Asset, BA: Asset> =
     dyn Future<Item = SwapOutcome<AL, BL, AA, BA>, Error = rfc003::Error> + Send;
 
 #[allow(missing_debug_implementations)]
-pub struct Context<AL: Ledger, BL: Ledger, AA: Asset, BA: Asset> {
+struct Context<AL: Ledger, BL: Ledger, AA: Asset, BA: Asset> {
     pub alpha_ledger_events: HtlcEventFutures<AL, AA>,
     pub beta_ledger_events: HtlcEventFutures<BL, BA>,
     pub state_repo: Arc<dyn SaveState<AL, BL, AA, BA>>,
 }
+
+type DeployedFuture<L> = dyn Future<Item = Deployed<L>, Error = rfc003::Error>;
+type FundedFuture<L, A> = dyn Future<Item = Funded<L, A>, Error = rfc003::Error>;
+type RedeemedOrRefundedFuture<L> =
+    dyn Future<Item = Either<Redeemed<L>, Refunded<L>>, Error = rfc003::Error>;
 
 // This is an adaptor struct that exists because our current state
 // machine implementation requires that we return &mut Futures. This
@@ -184,7 +187,7 @@ pub struct Context<AL: Ledger, BL: Ledger, AA: Asset, BA: Asset> {
 // where the methods return plain Futures and we save them here so we
 // don't duplicate them at runtime.
 #[allow(missing_debug_implementations)]
-pub struct HtlcEventFutures<L: Ledger, A: Asset> {
+struct HtlcEventFutures<L: Ledger, A: Asset> {
     htlc_events: Box<dyn HtlcEvents<L, A>>,
     htlc_deployed: Option<Box<DeployedFuture<L>>>,
     htlc_funded: Option<Box<FundedFuture<L, A>>>,
@@ -202,9 +205,10 @@ impl<L: Ledger, A: Asset> HtlcEventFutures<L, A> {
     }
 
     fn htlc_deployed(&mut self, htlc_params: HtlcParams<L, A>) -> &mut DeployedFuture<L> {
-        let htlc_events = &self.htlc_events;
+        let htlc_deployed = self.htlc_events.htlc_deployed(htlc_params).boxed().compat();
+
         self.htlc_deployed
-            .get_or_insert_with(move || htlc_events.htlc_deployed(htlc_params))
+            .get_or_insert_with(move || Box::new(htlc_deployed))
     }
 
     fn htlc_funded(
@@ -212,9 +216,13 @@ impl<L: Ledger, A: Asset> HtlcEventFutures<L, A> {
         htlc_params: HtlcParams<L, A>,
         htlc_location: &Deployed<L>,
     ) -> &mut FundedFuture<L, A> {
-        let htlc_events = &self.htlc_events;
+        let htlc_funded = self
+            .htlc_events
+            .htlc_funded(htlc_params, htlc_location)
+            .boxed()
+            .compat();
         self.htlc_funded
-            .get_or_insert_with(move || htlc_events.htlc_funded(htlc_params, htlc_location))
+            .get_or_insert_with(move || Box::new(htlc_funded))
     }
 
     fn htlc_redeemed_or_refunded(
@@ -223,10 +231,13 @@ impl<L: Ledger, A: Asset> HtlcEventFutures<L, A> {
         htlc_deployment: &Deployed<L>,
         htlc_funding: &Funded<L, A>,
     ) -> &mut RedeemedOrRefundedFuture<L> {
-        let htlc_events = &self.htlc_events;
-        self.htlc_redeemed_or_refunded.get_or_insert_with(move || {
-            htlc_events.htlc_redeemed_or_refunded(htlc_params, htlc_deployment, htlc_funding)
-        })
+        let htlc_redeemed_or_refunded = self
+            .htlc_events
+            .htlc_redeemed_or_refunded(htlc_params, htlc_deployment, htlc_funding)
+            .boxed()
+            .compat();
+        self.htlc_redeemed_or_refunded
+            .get_or_insert_with(move || Box::new(htlc_redeemed_or_refunded))
     }
 }
 

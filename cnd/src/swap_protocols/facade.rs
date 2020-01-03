@@ -11,10 +11,7 @@ use crate::{
         ledger::{Bitcoin, Ethereum},
         rfc003::{
             self,
-            events::{
-                Deployed, DeployedFuture, Funded, FundedFuture, HtlcEvents,
-                RedeemedOrRefundedFuture,
-            },
+            events::{Deployed, Funded, HtlcEvents, Redeemed, Refunded},
             state_machine::{HtlcParams, SwapStates},
             state_store::{self, InMemoryStateStore, StateStore},
             ActorState, Ledger,
@@ -25,6 +22,7 @@ use crate::{
 use async_trait::async_trait;
 use bitcoin::Amount;
 use futures::{sync::oneshot::Sender, Future};
+use futures_core::future::Either;
 use libp2p::PeerId;
 use libp2p_comit::frame::Response;
 use std::sync::Arc;
@@ -169,67 +167,73 @@ where
     }
 }
 
+#[async_trait::async_trait]
 impl<S> HtlcEvents<Bitcoin, Amount> for Facade<S>
 where
     S: Send + Sync + 'static,
 {
-    fn htlc_deployed(
+    async fn htlc_deployed(
         &self,
         htlc_params: HtlcParams<Bitcoin, Amount>,
-    ) -> Box<DeployedFuture<Bitcoin>> {
-        self.bitcoin_connector.htlc_deployed(htlc_params)
+    ) -> Result<Deployed<Bitcoin>, rfc003::Error> {
+        self.bitcoin_connector.htlc_deployed(htlc_params).await
     }
 
-    fn htlc_funded(
+    async fn htlc_funded(
         &self,
         htlc_params: HtlcParams<Bitcoin, Amount>,
         htlc_deployment: &Deployed<Bitcoin>,
-    ) -> Box<FundedFuture<Bitcoin, Amount>> {
+    ) -> Result<Funded<Bitcoin, Amount>, rfc003::Error> {
         self.bitcoin_connector
             .htlc_funded(htlc_params, htlc_deployment)
+            .await
     }
 
-    fn htlc_redeemed_or_refunded(
+    async fn htlc_redeemed_or_refunded(
         &self,
         htlc_params: HtlcParams<Bitcoin, Amount>,
         htlc_deployment: &Deployed<Bitcoin>,
         htlc_funding: &Funded<Bitcoin, Amount>,
-    ) -> Box<RedeemedOrRefundedFuture<Bitcoin>> {
+    ) -> Result<Either<Redeemed<Bitcoin>, Refunded<Bitcoin>>, rfc003::Error> {
         self.bitcoin_connector
             .htlc_redeemed_or_refunded(htlc_params, htlc_deployment, htlc_funding)
+            .await
     }
 }
 
+#[async_trait::async_trait]
 impl<A, S> HtlcEvents<Ethereum, A> for Facade<S>
 where
     S: Send + Sync + 'static,
     A: Asset + Send + Sync + 'static,
     Web3Connector: HtlcEvents<Ethereum, A>,
 {
-    fn htlc_deployed(&self, htlc_params: HtlcParams<Ethereum, A>) -> Box<DeployedFuture<Ethereum>> {
-        self.ethereum_connector.htlc_deployed(htlc_params)
+    async fn htlc_deployed(
+        &self,
+        htlc_params: HtlcParams<Ethereum, A>,
+    ) -> Result<Deployed<Ethereum>, rfc003::Error> {
+        self.ethereum_connector.htlc_deployed(htlc_params).await
     }
 
-    fn htlc_funded(
+    async fn htlc_funded(
         &self,
         htlc_params: HtlcParams<Ethereum, A>,
         htlc_deployment: &Deployed<Ethereum>,
-    ) -> Box<FundedFuture<Ethereum, A>> {
+    ) -> Result<Funded<Ethereum, A>, rfc003::Error> {
         self.ethereum_connector
             .htlc_funded(htlc_params, htlc_deployment)
+            .await
     }
 
-    fn htlc_redeemed_or_refunded(
+    async fn htlc_redeemed_or_refunded(
         &self,
         htlc_params: HtlcParams<Ethereum, A>,
         htlc_deployment: &Deployed<Ethereum>,
         htlc_funding: &Funded<Ethereum, A>,
-    ) -> Box<RedeemedOrRefundedFuture<Ethereum>> {
-        self.ethereum_connector.htlc_redeemed_or_refunded(
-            htlc_params,
-            htlc_deployment,
-            htlc_funding,
-        )
+    ) -> Result<Either<Redeemed<Ethereum>, Refunded<Ethereum>>, rfc003::Error> {
+        self.ethereum_connector
+            .htlc_redeemed_or_refunded(htlc_params, htlc_deployment, htlc_funding)
+            .await
     }
 }
 
