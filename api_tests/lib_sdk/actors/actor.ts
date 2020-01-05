@@ -131,14 +131,11 @@ export class Actor {
 
         const comitClient: ComitClient = this.getComitClient();
 
-        const defaultExpiries = defaultExpiryTimes();
         const payload = {
             alpha_ledger: alphaLedger,
             beta_ledger: betaLedger,
             alpha_asset: alphaAsset,
             beta_asset: betaAsset,
-            alpha_expiry: defaultExpiries.alpha_expiry,
-            beta_expiry: defaultExpiries.beta_expiry,
             peer: {
                 peer_id: await to.cnd.getPeerId(),
                 address_hint: await to.cnd
@@ -146,6 +143,7 @@ export class Actor {
                     .then(addresses => addresses[0]),
             },
             ...(await this.additionalIdentities(alphaAssetKind, betaAssetKind)),
+            ...defaultExpiryTimes(),
         };
 
         this.swap = await comitClient.sendSwap(payload);
@@ -160,7 +158,7 @@ export class Actor {
 
     public async accept() {
         if (!this.swap) {
-            throw new Error("Cannot accept non-existant swap");
+            throw new Error("Cannot accept non-existent swap");
         }
 
         await this.swap.accept(Actor.defaultActionConfig);
@@ -168,7 +166,7 @@ export class Actor {
 
     public async fund() {
         if (!this.swap) {
-            throw new Error("Cannot fund non-existant swap");
+            throw new Error("Cannot fund non-existent swap");
         }
 
         this.logger.debug("Funding as part of swap @ %s", this.swap.self);
@@ -189,7 +187,7 @@ export class Actor {
 
     public async refund() {
         if (!this.swap) {
-            throw new Error("Cannot refund non-existant swap");
+            throw new Error("Cannot refund non-existent swap");
         }
 
         this.logger.debug("Refunding as part of swap @ %s", this.swap.self);
