@@ -22,7 +22,7 @@ setTimeout(function() {
         }
     });
 
-    describe("Bob can refund and then Alice refunds", function() {
+    describe("Bob refunds then Alice refunds", function() {
         this.timeout(60000);
         it("bitcoin ether", async function() {
             await alice.sendRequest(AssetKind.Bitcoin, AssetKind.Ether);
