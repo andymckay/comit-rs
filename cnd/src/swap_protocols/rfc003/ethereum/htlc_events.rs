@@ -260,7 +260,7 @@ mod erc20 {
                                 .into_iter()
                                 .find(|log| log.topics.contains(&*super::TRANSFER_LOG_MSG))
                                 .ok_or_else(|| {
-                                    log::warn!(
+                                    tracing::warn!(
                                         "receipt for transaction {:?} did not contain any Transfer events",
                                         transaction.hash
                                     );

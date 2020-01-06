@@ -29,11 +29,11 @@ where
         + LoadAcceptedSwap<Bitcoin, Ethereum, bitcoin::Amount, Erc20Token>
         + LoadAcceptedSwap<Ethereum, Bitcoin, Erc20Token, bitcoin::Amount>,
 {
-    log::debug!("loading swaps from database ...");
+    tracing::debug!("loading swaps from database ...");
 
     for swap in Retrieve::all(&dependencies).await?.iter() {
         let swap_id = swap.swap_id;
-        log::debug!("got swap from database: {}", swap_id);
+        tracing::debug!("got swap from database: {}", swap_id);
 
         let types = DetermineTypes::determine_types(&dependencies, &swap_id).await?;
 
@@ -46,7 +46,7 @@ where
                 Ok((request, accept, _at)) => {
                     swap_protocols::init_accepted_swap(&dependencies, request, accept, types.role)?;
                 }
-                Err(e) => log::error!("failed to load swap: {}, continuing ...", e),
+                Err(e) => tracing::error!("failed to load swap: {}, continuing ...", e),
             };
         });
     }

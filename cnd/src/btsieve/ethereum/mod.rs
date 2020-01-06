@@ -66,13 +66,13 @@ where
                         }
                     }
                     Ok(Some(_)) => {
-                        log::warn!("Ignoring block without blockhash");
+                        tracing::warn!("Ignoring block without blockhash");
                     }
                     Ok(None) => {
-                        log::warn!("Could not get latest block");
+                        tracing::warn!("Could not get latest block");
                     }
                     Err(e) => {
-                        log::warn!("Could not get latest block: {:?}", e);
+                        tracing::warn!("Could not get latest block: {:?}", e);
                     }
                 };
             }
@@ -99,10 +99,14 @@ where
                                 .await;
                             }
                             Ok(None) => {
-                                log::warn!("Block with hash {} does not exist", blockhash);
+                                tracing::warn!("Block with hash {} does not exist", blockhash);
                             }
                             Err(e) => {
-                                log::warn!("Could not get block with hash {}: {:?}", blockhash, e);
+                                tracing::warn!(
+                                    "Could not get block with hash {}: {:?}",
+                                    blockhash,
+                                    e
+                                );
 
                                 fetch_block_by_hash_queue.send(blockhash).await
                             }
@@ -158,10 +162,13 @@ where
                                 }
                             }
                             Ok(None) => {
-                                log::warn!("Block with hash {} does not exist", parent_blockhash);
+                                tracing::warn!(
+                                    "Block with hash {} does not exist",
+                                    parent_blockhash
+                                );
                             }
                             Err(e) => {
-                                log::warn!(
+                                tracing::warn!(
                                     "Could not get block with hash {}: {:?}",
                                     parent_blockhash,
                                     e
@@ -196,11 +203,11 @@ where
                                 let receipt = match result {
                                     Ok(Some(receipt)) => receipt,
                                     Ok(None) => {
-                                        log::warn!("Could not get transaction receipt");
+                                        tracing::warn!("Could not get transaction receipt");
                                         continue;
                                     }
                                     Err(e) => {
-                                        log::warn!(
+                                        tracing::warn!(
                                             "Could not retrieve transaction receipt for {}: {:?}",
                                             transaction.hash,
                                             e
@@ -224,11 +231,11 @@ where
                                 let receipt = match result {
                                     Ok(Some(receipt)) => receipt,
                                     Ok(None) => {
-                                        log::warn!("Could not get transaction receipt for matching transaction");
+                                        tracing::warn!("Could not get transaction receipt for matching transaction");
                                         continue;
                                     }
                                     Err(e) => {
-                                        log::warn!(
+                                        tracing::warn!(
                                                             "Could not retrieve transaction receipt for matching transaction {}: {:?}",
                                                             transaction.hash,
                                                             e

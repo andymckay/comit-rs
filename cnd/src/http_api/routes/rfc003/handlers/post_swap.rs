@@ -255,7 +255,7 @@ where
                     )?;
                 }
                 Err(decline) => {
-                    log::info!("Swap declined: {:?}", decline);
+                    tracing::info!("Swap declined: {:?}", decline);
                     let state = State::declined(swap_request.clone(), decline.clone(), seed);
                     StateStore::insert(&dependencies, id, state.clone());
                     Save::save(&dependencies, decline.clone()).await?;
@@ -265,7 +265,7 @@ where
         }
     };
     tokio::spawn(future.boxed().compat().map_err(|e: anyhow::Error| {
-        log::error!("{:?}", e);
+        tracing::error!("{:?}", e);
     }));
     Ok(())
 }

@@ -1,6 +1,5 @@
 use crate::config::{file, Bitcoin, Data, Ethereum, File, Network, Socket};
 use anyhow::Context;
-use log::LevelFilter;
 use reqwest::Url;
 use std::net::{IpAddr, Ipv4Addr};
 
@@ -15,7 +14,6 @@ pub struct Settings {
     pub network: Network,
     pub http_api: HttpApi,
     pub data: Data,
-    pub logging: Logging,
     pub bitcoin: Bitcoin,
     pub ethereum: Ethereum,
 }
@@ -26,7 +24,6 @@ impl From<Settings> for File {
             network,
             http_api: HttpApi { socket, cors },
             data,
-            logging: Logging { level, structured },
             bitcoin,
             ethereum,
         } = settings;
@@ -44,10 +41,6 @@ impl From<Settings> for File {
                 }),
             }),
             data: Some(data),
-            logging: Some(file::Logging {
-                level: Some(level),
-                structured: Some(structured),
-            }),
             bitcoin: Some(bitcoin),
             ethereum: Some(ethereum),
         }
@@ -92,21 +85,12 @@ pub enum AllowedOrigins {
     Some(Vec<String>),
 }
 
-#[derive(Clone, Debug, PartialEq, derivative::Derivative)]
-#[derivative(Default)]
-pub struct Logging {
-    #[derivative(Default(value = "LevelFilter::Debug"))]
-    pub level: LevelFilter,
-    pub structured: bool,
-}
-
 impl Settings {
     pub fn from_config_file_and_defaults(config_file: File) -> anyhow::Result<Self> {
         let File {
             network,
             http_api,
             data,
-            logging,
             bitcoin,
             ethereum,
         } = config_file;
@@ -147,19 +131,6 @@ impl Settings {
                     dir: default_data_dir,
                 })
             },
-
-            logging: {
-                let Logging {
-                    level: default_level,
-                    structured: default_structured,
-                } = Logging::default();
-                logging
-                    .map(|logging| Logging {
-                        level: logging.level.unwrap_or(default_level),
-                        structured: logging.structured.unwrap_or(default_structured),
-                    })
-                    .unwrap_or_default()
-            },
             bitcoin: bitcoin.unwrap_or_else(|| Bitcoin {
                 network: bitcoin::Network::Regtest,
                 node_url: Url::parse("http://localhost:18443")
@@ -180,60 +151,6 @@ mod tests {
     use crate::config::file;
     use spectral::prelude::*;
     use std::net::{IpAddr, Ipv4Addr};
-
-    #[test]
-    fn field_structured_defaults_to_false() {
-        let config_file = File {
-            logging: Some(file::Logging {
-                level: None,
-                structured: None,
-            }),
-            ..File::default()
-        };
-
-        let settings = Settings::from_config_file_and_defaults(config_file);
-
-        assert_that(&settings)
-            .is_ok()
-            .map(|settings| &settings.logging.structured)
-            .is_false()
-    }
-
-    #[test]
-    fn field_structured_is_correctly_mapped() {
-        let config_file = File {
-            logging: Some(file::Logging {
-                level: None,
-                structured: Some(true),
-            }),
-            ..File::default()
-        };
-
-        let settings = Settings::from_config_file_and_defaults(config_file);
-
-        assert_that(&settings)
-            .is_ok()
-            .map(|settings| &settings.logging.structured)
-            .is_true()
-    }
-
-    #[test]
-    fn logging_section_defaults_to_debug_and_false() {
-        let config_file = File {
-            logging: None,
-            ..File::default()
-        };
-
-        let settings = Settings::from_config_file_and_defaults(config_file);
-
-        assert_that(&settings)
-            .is_ok()
-            .map(|settings| &settings.logging)
-            .is_equal_to(Logging {
-                level: LevelFilter::Debug,
-                structured: false,
-            })
-    }
 
     #[test]
     fn cors_section_defaults_to_no_allowed_foreign_origins() {

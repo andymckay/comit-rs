@@ -54,18 +54,18 @@ impl StateStore for InMemoryStateStore {
         let mut actor_state = match self.get::<A>(key) {
             Ok(Some(actor_state)) => actor_state,
             Ok(None) => {
-                log::warn!("Value not found for key {}", key);
+                tracing::warn!("Value not found for key {}", key);
                 return;
             }
             Err(_invalid_type) => {
-                log::warn!("Attempted to get state with wrong type for key {}", key);
+                tracing::warn!("Attempted to get state with wrong type for key {}", key);
                 return;
             }
         };
 
         match update {
             SS::Start(_) => {
-                log::warn!("Attempted to update Start state for key {}", key);
+                tracing::warn!("Attempted to update Start state for key {}", key);
                 return;
             }
             SS::AlphaDeployed(AlphaDeployed { alpha_deployed, .. }) => {
@@ -246,7 +246,7 @@ impl StateStore for InMemoryStateStore {
                 actor_state.set_secret(alpha_redeemed.secret);
             }
             SS::Error(ErrorState(e)) => {
-                log::error!("Internal failure: {:?}", e);
+                tracing::error!("Internal failure: {:?}", e);
                 return;
             }
         }

@@ -271,7 +271,7 @@ async fn handle_request(
                             Ok(swap_id)
                         }
                         (alpha_ledger, beta_ledger, alpha_asset, beta_asset) => {
-                            log::warn!(
+                            tracing::warn!(
                                     "swapping {:?} to {:?} from {:?} to {:?} is currently not supported", alpha_asset, beta_asset, alpha_ledger, beta_ledger
                                 );
 
@@ -300,7 +300,7 @@ async fn handle_request(
         // type is checked on the messaging layer and will be handled there if
         // an unknown request_type is passed in.
         request_type => {
-            log::warn!("request type '{}' is unknown", request_type);
+            tracing::warn!("request type '{}' is unknown", request_type);
 
             Err(Response::empty().with_header(
                 "decision",
@@ -399,7 +399,7 @@ where
 
         let response = {
             let mut swarm = self.lock().unwrap();
-            log::debug!(
+            tracing::debug!(
                 "Making swap request to {}: {:?}",
                 dial_information.clone(),
                 request
@@ -416,7 +416,7 @@ where
                         .map(Decision::from_header)
                         .map_or(Ok(None), |x| x.map(Some))
                         .map_err(|e| {
-                            log::error!(
+                            tracing::error!(
                                 "Could not deserialize header in response {:?}: {}",
                                 response,
                                 e,
@@ -455,7 +455,7 @@ where
                     }
                 }
                 Err(e) => {
-                    log::error!(
+                    tracing::error!(
                         "Unable to request over connection {:?}:{:?}",
                         dial_information,
                         e
@@ -494,7 +494,7 @@ impl<TSubstream> NetworkBehaviourEventProcess<BehaviourOutEvent> for ComitNode<T
                                     response_channels.insert(id, channel);
                                 }
                                 Err(response) => channel.send(response).unwrap_or_else(|_| {
-                                    log::debug!("failed to send response through channel")
+                                    tracing::debug!("failed to send response through channel")
                                 }),
                             }
                             Ok(())
@@ -511,12 +511,12 @@ impl<TSubstream> NetworkBehaviourEventProcess<libp2p::mdns::MdnsEvent> for Comit
         match event {
             MdnsEvent::Discovered(addresses) => {
                 for (peer, address) in addresses {
-                    log::trace!("discovered {} at {}", peer, address)
+                    tracing::trace!("discovered {} at {}", peer, address)
                 }
             }
             MdnsEvent::Expired(addresses) => {
                 for (peer, address) in addresses {
-                    log::trace!("address {} of peer {} expired", address, peer)
+                    tracing::trace!("address {} of peer {} expired", address, peer)
                 }
             }
         }

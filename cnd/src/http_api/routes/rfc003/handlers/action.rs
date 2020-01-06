@@ -60,7 +60,7 @@ pub async fn handle_action<
         let state = StateStore::get::<ROLE>(&dependencies, &swap_id)?.ok_or_else(|| {
             anyhow::anyhow!("state store did not contain an entry for {}", swap_id)
         })?;
-        log::trace!("Retrieved state for {}: {:?}", swap_id, state);
+        tracing::trace!("Retrieved state for {}: {:?}", swap_id, state);
 
         let action = state
             .actions()
@@ -418,7 +418,7 @@ where
             Action::Refund(_) => Refund::list_required_fields(),
         };
 
-        log::debug!(target: "http-api", "Creating siren::Action from {:?} with HTTP method: {}, Media-Type: {:?}, Name: {}, Fields: {:?}", self, method, media_type, name, fields);
+        tracing::debug!(target: "http-api", "Creating siren::Action from {:?} with HTTP method: {}, Media-Type: {:?}, Name: {}, Fields: {:?}", self, method, media_type, name, fields);
 
         siren::Action {
             href: new_action_link(id, &name),

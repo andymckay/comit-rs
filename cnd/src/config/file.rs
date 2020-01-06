@@ -1,6 +1,5 @@
 use crate::config::{Bitcoin, Data, Ethereum, Network, Socket};
 use config as config_rs;
-use log::LevelFilter;
 use std::{ffi::OsStr, path::Path};
 
 /// This struct aims to represent the configuration file as it appears on disk.
@@ -13,7 +12,6 @@ pub struct File {
     pub network: Option<Network>,
     pub http_api: Option<HttpApi>,
     pub data: Option<Data>,
-    pub logging: Option<Logging>,
     pub bitcoin: Option<Bitcoin>,
     pub ethereum: Option<Ethereum>,
 }
@@ -24,7 +22,6 @@ impl File {
             network: Option::None,
             http_api: Option::None,
             data: Option::None,
-            logging: Option::None,
             bitcoin: Option::None,
             ethereum: Option::None,
         }
@@ -37,12 +34,6 @@ impl File {
         config.merge(config_rs::File::from(config_file))?;
         config.try_into()
     }
-}
-
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize, PartialEq)]
-pub struct Logging {
-    pub level: Option<LevelFilter>,
-    pub structured: Option<bool>,
 }
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize, PartialEq)]
@@ -80,34 +71,11 @@ pub enum None {
 mod tests {
     use super::*;
     use crate::config::Settings;
-    use log::LevelFilter;
     use spectral::prelude::*;
     use std::{
         net::{IpAddr, Ipv4Addr},
         path::PathBuf,
     };
-
-    #[derive(serde::Deserialize, PartialEq, Debug)]
-    struct LoggingOnlyConfig {
-        logging: Logging,
-    }
-
-    #[test]
-    fn structured_logging_flag_in_logging_section_is_optional() {
-        let file_contents = r#"
-        [logging]
-        level = "DEBUG"
-        "#;
-
-        let config_file = toml::from_str(file_contents);
-
-        assert_that(&config_file).is_ok_containing(LoggingOnlyConfig {
-            logging: Logging {
-                level: Option::Some(LevelFilter::Debug),
-                structured: Option::None,
-            },
-        });
-    }
 
     #[test]
     fn cors_deserializes_correctly() {
@@ -163,10 +131,6 @@ allowed_origins = "all"
 [data]
 dir = "/tmp/comit/"
 
-[logging]
-level = "DEBUG"
-structured = false
-
 [bitcoin]
 network = "mainnet"
 node_url = "http://example.com/"
@@ -190,10 +154,6 @@ node_url = "http://example.com/"
             }),
             data: Some(Data {
                 dir: PathBuf::from("/tmp/comit/"),
-            }),
-            logging: Some(Logging {
-                level: Some(LevelFilter::Debug),
-                structured: Some(false),
             }),
             bitcoin: Some(Bitcoin {
                 network: bitcoin::Network::Bitcoin,

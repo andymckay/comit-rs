@@ -118,7 +118,7 @@ impl HtlcEvents<Bitcoin, Amount> for BitcoindConnector {
                     move |tx| {
                         let secret =
                             extract_secret(&tx, &htlc_params.secret_hash).ok_or_else(|| {
-                                log::error!(
+                                tracing::error!(
                                     "Redeem transaction didn't have secret it in: {:?}",
                                     tx
                                 );

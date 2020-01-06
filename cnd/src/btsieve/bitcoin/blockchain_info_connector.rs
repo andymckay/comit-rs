@@ -22,7 +22,7 @@ impl BlockchainInfoConnector {
         // support hex-encoded block retrieval for testnet.
 
         if network != Network::Bitcoin {
-            log::error!(
+            tracing::error!(
                 "Network {} not supported for bitcoin http connector",
                 network
             );
@@ -93,7 +93,7 @@ impl BlockByHash for BlockchainInfoConnector {
         );
 
         Box::new(block.inspect(|block| {
-            log::trace!("Fetched block from blockchain.info: {:?}", block);
+            tracing::trace!("Fetched block from blockchain.info: {:?}", block);
         }))
     }
 }

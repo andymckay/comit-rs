@@ -35,7 +35,7 @@ where
     let latest_block = match blockchain_connector.latest_block().compat().await {
         Ok(block) => block,
         Err(e) => {
-            log::error!("Failed to connect to the blockchain_connector: {:?}", e,);
+            tracing::error!("Failed to connect to the blockchain_connector: {:?}", e,);
             return Err(());
         }
     };
@@ -64,7 +64,7 @@ where
         Delay::new(std::time::Instant::now().add(std::time::Duration::from_secs(1)))
             .compat()
             .await
-            .unwrap_or_else(|e| log::warn!("Failed to wait for delay: {:?}", e));
+            .unwrap_or_else(|e| tracing::warn!("Failed to wait for delay: {:?}", e));
 
         let mut new_missing_block_futures = Vec::new();
         for (block_future, blockhash) in missing_block_futures.into_iter() {
@@ -85,7 +85,7 @@ where
                     };
                 }
                 Err(e) => {
-                    log::warn!("Could not get block with hash {}: {:?}", blockhash, e);
+                    tracing::warn!("Could not get block with hash {}: {:?}", blockhash, e);
 
                     let future = blockchain_connector.block_by_hash(blockhash).compat();
                     new_missing_block_futures.push((future, blockhash));
@@ -111,7 +111,7 @@ where
                             oldest_block.replace(block);
                         }
                     },
-                    Err(e) => log::warn!(
+                    Err(e) => tracing::warn!(
                         "Could not get block with hash {}: {:?}",
                         block.bitcoin_hash(),
                         e

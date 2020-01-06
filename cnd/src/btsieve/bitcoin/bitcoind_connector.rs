@@ -47,12 +47,12 @@ impl LatestBlock for BitcoindConnector {
             .get(self.chaininfo_url.clone())
             .send()
             .map_err(|e| {
-                log::error!("Error when sending request to bitcoind");
+                tracing::error!("Error when sending request to bitcoind");
                 Self::Error::Reqwest(e)
             })
             .and_then(move |mut response| {
                 response.json::<ChainInfo>().map_err(|e| {
-                    log::error!("Error when deserialising the response from bitcoind");
+                    tracing::error!("Error when deserialising the response from bitcoind");
                     Self::Error::Reqwest(e)
                 })
             })
@@ -82,7 +82,7 @@ impl BlockByHash for BitcoindConnector {
             bitcoin_http_request_for_hex_encoded_object::<Self::Block>(url, self.client.clone());
 
         Box::new(block.inspect(|block| {
-            log::trace!("Fetched block from bitcoind: {:?}", block);
+            tracing::trace!("Fetched block from bitcoind: {:?}", block);
         }))
     }
 }

@@ -27,7 +27,7 @@ use std::{
 use structopt::StructOpt;
 
 mod cli;
-mod logging;
+mod trace;
 
 fn main() -> anyhow::Result<()> {
     let options = cli::Options::from_args();
@@ -44,8 +44,7 @@ fn main() -> anyhow::Result<()> {
         process::exit(0);
     }
 
-    let base_log_level = settings.logging.level;
-    logging::initialize(base_log_level, settings.logging.structured)?;
+    crate::trace::init_tracing()?;
 
     let seed = Seed::from_dir_or_generate(&settings.data.dir, OsRng)?;
 
@@ -65,7 +64,7 @@ fn main() -> anyhow::Result<()> {
 
     let local_key_pair = derive_key_pair(&seed);
     let local_peer_id = PeerId::from(local_key_pair.clone().public());
-    log::info!("Starting with peer_id: {}", local_peer_id);
+    tracing::info!("Starting with peer_id: {}", local_peer_id);
 
     let transport = transport::build_comit_transport(local_key_pair);
     let behaviour = network::ComitNode::new(
@@ -106,7 +105,7 @@ fn main() -> anyhow::Result<()> {
     let swarm_worker = stream::poll_fn(move || swarm.lock().unwrap().poll())
         .for_each(|_| Ok(()))
         .map_err(|e| {
-            log::error!("failed with {:?}", e);
+            tracing::error!("failed with {:?}", e);
         });
 
     runtime.spawn(swarm_worker);
@@ -150,7 +149,7 @@ fn spawn_warp_instance<S: Network>(
         settings.http_api.socket.port,
     );
 
-    log::info!("Starting HTTP server on {:?}", listen_addr);
+    tracing::info!("Starting HTTP server on {:?}", listen_addr);
 
     let server = warp::serve(routes).bind(listen_addr);
 

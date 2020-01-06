@@ -353,8 +353,8 @@ where
         },
         context,
     )
-    .map(move |outcome| log::info!("Swap {} finished with {:?}", id, outcome))
-    .map_err(move |e| log::error!("Swap {} failed with {:?}", id, e));
+    .map(move |outcome| tracing::info!("Swap {} finished with {:?}", id, outcome))
+    .map_err(move |e| tracing::error!("Swap {} failed with {:?}", id, e));
 
     (swap_execution, receiver)
 }

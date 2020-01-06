@@ -24,7 +24,6 @@ pub mod config;
 pub mod ethereum;
 pub mod http_api;
 pub mod load_swaps;
-pub mod logging;
 pub mod network;
 #[cfg(test)]
 pub mod quickcheck;
