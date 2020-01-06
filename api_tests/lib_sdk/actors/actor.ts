@@ -241,7 +241,10 @@ export class Actor {
             const balanceInclFees = expectedBalance.minus(maximumFee);
             const currentWalletBalance = await wallet.getBalance();
 
-            expect(currentWalletBalance).to.be.gte.BN(balanceInclFees);
+            // @ts-ignore
+            expect(currentWalletBalance).to.be.bignumber.at.least(
+                balanceInclFees
+            );
         }
     }
 
