@@ -3,7 +3,7 @@ use crate::{
     ethereum::{self, Erc20Token, EtherQuantity},
     http_api::{HttpAsset, HttpLedger},
     network::{DialInformation, Network},
-    seed::{Seed, SwapSeed},
+    seed::SwapSeed,
     swap_protocols::{
         self,
         asset::Asset,
@@ -312,7 +312,10 @@ struct Identities<AL: Ledger, BL: Ledger> {
 }
 
 trait IntoIdentities<AL: Ledger, BL: Ledger> {
-    fn into_identities(self, secret_saource: &Seed) -> anyhow::Result<Identities<AL, BL>>;
+    fn into_identities(
+        self,
+        secret_source: &dyn DeriveIdentities,
+    ) -> anyhow::Result<Identities<AL, BL>>;
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -344,7 +347,7 @@ pub enum IdentityKind {
 impl IntoIdentities<ledger::Bitcoin, ledger::Ethereum> for HttpIdentities {
     fn into_identities(
         self,
-        secret_source: &Seed,
+        secret_source: &dyn DeriveIdentities,
     ) -> anyhow::Result<Identities<ledger::Bitcoin, ledger::Ethereum>> {
         let HttpIdentities {
             alpha_ledger_refund_identity,
@@ -381,7 +384,7 @@ impl IntoIdentities<ledger::Bitcoin, ledger::Ethereum> for HttpIdentities {
 impl IntoIdentities<ledger::Ethereum, ledger::Bitcoin> for HttpIdentities {
     fn into_identities(
         self,
-        secret_source: &Seed,
+        secret_source: &dyn DeriveIdentities,
     ) -> anyhow::Result<Identities<ledger::Ethereum, ledger::Bitcoin>> {
         let HttpIdentities {
             alpha_ledger_refund_identity,
